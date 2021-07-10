@@ -1,0 +1,12 @@
+[package]
+name = "syzygy"
+version = "0.1.0"
+authors = ["Noah Kim <noahbkim@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+hyper = { version = "0.14.10", features = ["server", "runtime", "http1", "http2"] }
+tokio = { version = "1.8.1", features = ["full"] }
+serde_json = "1.0.64"
+async-trait = "0.1.50"
+url = "2.2.2"

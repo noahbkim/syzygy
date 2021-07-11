@@ -1,10 +1,10 @@
 use super::TreeNode;
-use crate::parts::Parts;
+use crate::router::path::Parts;
 use crate::router::{Path, Route};
 use crate::{Request, Response};
 use async_trait::async_trait;
-use std::sync::Arc;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait View<S>: Send + Sync + 'static
@@ -70,18 +70,18 @@ where
 // }
 
 pub struct DefaultParentViewRouter<S, T>
-    where
-        S: ?Sized + Send + Sync + 'static,
-        T: ViewTransition<S> + ?Sized + Send + Sync + 'static,
+where
+    S: ?Sized + Send + Sync + 'static,
+    T: ViewTransition<S> + ?Sized + Send + Sync + 'static,
 {
     view: Arc<dyn View<S>>,
     children: HashMap<&'static str, Box<dyn TreeNode<T>>>,
 }
 
 impl<S, T> ViewRouter<S> for DefaultParentViewRouter<S, T>
-    where
-        S: ?Sized + Send + Sync + 'static,
-        T: ViewTransition<S> + ?Sized + Send + Sync + 'static,
+where
+    S: ?Sized + Send + Sync + 'static,
+    T: ViewTransition<S> + ?Sized + Send + Sync + 'static,
 {
     fn view(&self) -> Arc<dyn View<S>> {
         self.view.clone()
@@ -106,8 +106,8 @@ where
     T: ViewTransition<S> + ?Sized + Send + Sync + 'static,
 {
     fn route<'p>(&self, path: Path<'p>, state: Box<S>) -> Option<Box<Route>> {
-        match crate::parts::Parts::from(path) {
-            crate::parts::Parts::Nil => Some(self.view().prepare(state)),
+        match crate::router::path::Parts::from(path) {
+            crate::router::path::Parts::Nil => Some(self.view().prepare(state)),
             Parts::Cons(part, rest) => match self.child(part) {
                 Some(child) => child.route(rest, T::from(state, part)),
                 None => None,
@@ -115,4 +115,3 @@ where
         }
     }
 }
-

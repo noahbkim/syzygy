@@ -1,10 +1,10 @@
 use super::TreeNode;
-use crate::parts::Parts;
+use crate::router::path::Parts;
 use crate::router::{Path, Route};
 use crate::{Request, Response};
 use async_trait::async_trait;
-use std::sync::Arc;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 #[async_trait]
 pub trait CollectionView<S>: Send + Sync + 'static

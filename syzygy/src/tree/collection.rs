@@ -37,7 +37,7 @@ where
     fn from(state: Box<S>, id: &str, part: &str) -> Box<Self>;
 }
 
-pub trait CollectionViewRouterParent<S>
+pub trait ParentCollectionViewRouter<S>
 where
     S: ?Sized + Send + Sync + 'static,
 {
@@ -54,42 +54,42 @@ where
     fn collection(&self) -> Arc<dyn CollectionView<S>>;
 }
 
-impl<S, R> TreeNode<S> for R
-where
-    S: ?Sized + Send + Sync + 'static,
-    R: CollectionViewRouter<S> + Send + Sync + 'static,
-{
-    default fn route(&self, path: Path, state: Box<S>) -> Option<Box<Route>> {
-        match Parts::from(path) {
-            Parts::Nil => Some(self.collection().prepare(state)),
-            Parts::Cons(id, rest) => match Parts::from(rest) {
-                Parts::Nil => Some(self.item().prepare(id.into(), state)),
-                _ => None,
-            },
-        }
-    }
-}
+// impl<S, R> TreeNode<S> for R
+// where
+//     S: ?Sized + Send + Sync + 'static,
+//     R: CollectionViewRouter<S> + CollectionViewRouterParent<S> + Send + Sync + 'static,
+// {
+//     default fn route<'p>(&self, path: Path<'p>, state: Box<S>) -> Option<Box<Route>> {
+//         match Parts::from(path) {
+//             Parts::Nil => Some(self.collection().prepare(state)),
+//             Parts::Cons(id, rest) => match Parts::from(rest) {
+//                 Parts::Nil => Some(self.item().prepare(id.into(), state)),
+//                 Parts::Cons(part, rest) => match self.child(part) {
+//                     Some(child) => child.route(rest, R::T::from(state, id, part)),
+//                     None => None,
+//                 },
+//             },
+//         }
+//     }
+// }
 
-impl<S, R> TreeNode<S> for R
-where
-    S: ?Sized + Send + Sync + 'static,
-    R: CollectionViewRouter<S> + CollectionViewRouterParent<S> + Send + Sync + 'static,
-{
-    default fn route<'p>(&self, path: Path<'p>, state: Box<S>) -> Option<Box<Route>> {
-        match Parts::from(path) {
-            Parts::Nil => Some(self.collection().prepare(state)),
-            Parts::Cons(id, rest) => match Parts::from(rest) {
-                Parts::Nil => Some(self.item().prepare(id.into(), state)),
-                Parts::Cons(part, rest) => match self.child(part) {
-                    Some(child) => child.route(rest, R::T::from(state, id, part)),
-                    None => None,
-                },
-            },
-        }
-    }
-}
+// impl<S, R> TreeNode<S> for R
+// where
+//     S: ?Sized + Send + Sync + 'static,
+//     R: CollectionViewRouter<S> + Send + Sync + 'static,
+// {
+//     default fn route(&self, path: Path, state: Box<S>) -> Option<Box<Route>> {
+//         match Parts::from(path) {
+//             Parts::Nil => Some(self.collection().prepare(state)),
+//             Parts::Cons(id, rest) => match Parts::from(rest) {
+//                 Parts::Nil => Some(self.item().prepare(id.into(), state)),
+//                 _ => None,
+//             },
+//         }
+//     }
+// }
 
-struct DefaultCollectionParentRouter<S, T>
+pub struct DefaultParentCollectionViewRouter<S, T>
 where
     S: ?Sized + Send + Sync + 'static,
     T: CollectionViewTransition<S> + ?Sized + Send + Sync + 'static,
@@ -99,7 +99,7 @@ where
     children: HashMap<&'static str, Box<dyn TreeNode<T>>>,
 }
 
-impl<S, T> CollectionViewRouter<S> for DefaultCollectionParentRouter<S, T>
+impl<S, T> CollectionViewRouter<S> for DefaultParentCollectionViewRouter<S, T>
 where
     S: ?Sized + Send + Sync + 'static,
     T: CollectionViewTransition<S> + ?Sized + Send + Sync + 'static,
@@ -113,7 +113,7 @@ where
     }
 }
 
-impl<S, T> CollectionViewRouterParent<S> for DefaultCollectionParentRouter<S, T>
+impl<S, T> ParentCollectionViewRouter<S> for DefaultParentCollectionViewRouter<S, T>
 where
     S: ?Sized + Send + Sync + 'static,
     T: CollectionViewTransition<S> + ?Sized + Send + Sync + 'static,
@@ -122,5 +122,24 @@ where
 
     fn child(&self, part: &str) -> Option<&Box<dyn TreeNode<Self::T>>> {
         self.children.get(part)
+    }
+}
+
+impl<S, T> TreeNode<S> for DefaultParentCollectionViewRouter<S, T>
+where
+    S: ?Sized + Send + Sync + 'static,
+    T: CollectionViewTransition<S> + ?Sized + Send + Sync + 'static,
+{
+    fn route<'p>(&self, path: Path<'p>, state: Box<S>) -> Option<Box<Route>> {
+        match Parts::from(path) {
+            Parts::Nil => Some(self.collection().prepare(state)),
+            Parts::Cons(id, rest) => match Parts::from(rest) {
+                Parts::Nil => Some(self.item().prepare(id.into(), state)),
+                Parts::Cons(part, rest) => match self.child(part) {
+                    Some(child) => child.route(rest, T::from(state, id, part)),
+                    None => None,
+                },
+            },
+        }
     }
 }

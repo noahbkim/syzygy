@@ -1,5 +1,3 @@
-#![feature(specialization)]
-
 use hyper;
 
 pub mod parts;

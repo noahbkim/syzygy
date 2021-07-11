@@ -24,12 +24,12 @@ where
     fn from(s: Box<S>, t: &str) -> Box<Self>;
 }
 
-pub trait ViewParent<S>
+pub trait ViewRouterParent<S>
 where
     S: ?Sized + Send + Sync + 'static,
 {
     type T: ViewTransition<S> + ?Sized + Send + Sync + 'static;
-    fn child(&self, part: &str) -> Option<Box<dyn TreeNode<Self::T>>>;
+    fn child(&self, part: &str) -> Option<&Box<dyn TreeNode<Self::T>>>;
 }
 
 pub trait ViewRouter<S>
@@ -42,7 +42,7 @@ where
 impl<S, V> TreeNode<S> for V
 where
     S: ?Sized + Send + Sync + 'static,
-    V: ViewRouter<S> + ViewParent<S> + Send + Sync + 'static,
+    V: ViewRouter<S> + ViewRouterParent<S> + Send + Sync + 'static,
 {
     default fn route<'p>(&self, path: Path<'p>, state: Box<S>) -> Option<Box<Route>> {
         match Parts::from(path) {

@@ -1,4 +1,4 @@
-use super::{TreeNode, Transition};
+use super::TreeNode;
 use crate::parts::Parts;
 use crate::router::{Path, Route};
 use crate::{Request, Response};
@@ -17,6 +17,21 @@ where
     }
 }
 
+pub trait ViewTransition<S>
+where
+    S: ?Sized,
+{
+    fn from(s: Box<S>, t: &str) -> Box<Self>;
+}
+
+pub trait ViewParent<S>
+where
+    S: ?Sized + Send + Sync + 'static,
+{
+    type T: ViewTransition<S> + ?Sized + Send + Sync + 'static;
+    fn child(&self, part: &str) -> Option<Box<dyn TreeNode<Self::T>>>;
+}
+
 pub trait ViewRouter<S>
 where
     S: ?Sized + Send + Sync + 'static,
@@ -24,15 +39,7 @@ where
     fn view(&self) -> Arc<dyn View<S>>;
 }
 
-pub trait ViewParent<S>
-where
-    S: ?Sized + Send + Sync + 'static,
-{
-    type T: Transition<S> + ?Sized + Send + Sync + 'static;
-    fn child(&self, part: &str) -> Option<Box<dyn TreeNode<Self::T>>>;
-}
-
-impl<'a, S, V> TreeNode<S> for V
+impl<S, V> TreeNode<S> for V
 where
     S: ?Sized + Send + Sync + 'static,
     V: ViewRouter<S> + ViewParent<S> + Send + Sync + 'static,

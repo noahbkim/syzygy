@@ -56,4 +56,3 @@ mod tests {
         assert_eq!(Parts::from("//"), Parts::Nil);
     }
 }
-

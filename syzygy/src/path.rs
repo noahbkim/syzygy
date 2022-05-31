@@ -4,8 +4,8 @@ pub enum Parts<'a> {
     Nil,
 }
 
-impl<'a> From<&'a str> for Parts<'a> {
-    fn from(mut path: &'a str) -> Self {
+impl<'a> Parts<'a> {
+    pub fn split(mut path: &'a str) -> Self {
         path = path.trim_start_matches('/');
         if path.len() > 0 {
             let slash = path.find('/').unwrap_or(path.len());
@@ -28,31 +28,31 @@ mod tests {
 
     #[test]
     fn one_part() {
-        assert_eq!(Parts::from("/a"), Parts::Cons("a", ""));
+        assert_eq!(Parts::split("/a"), Parts::Cons("a", ""));
     }
 
     #[test]
     fn two_parts() {
-        assert_eq!(Parts::from("/a/b"), Parts::Cons("a", "/b"));
+        assert_eq!(Parts::split("/a/b"), Parts::Cons("a", "/b"));
     }
 
     #[test]
     fn one_part_tail() {
-        assert_eq!(Parts::from("/a/"), Parts::Cons("a", "/"));
+        assert_eq!(Parts::split("/a/"), Parts::Cons("a", "/"));
     }
 
     #[test]
     fn empty() {
-        assert_eq!(Parts::from(""), Parts::Nil);
+        assert_eq!(Parts::split(""), Parts::Nil);
     }
 
     #[test]
     fn one_slash() {
-        assert_eq!(Parts::from("/"), Parts::Nil);
+        assert_eq!(Parts::split("/"), Parts::Nil);
     }
 
     #[test]
     fn two_slashes() {
-        assert_eq!(Parts::from("//"), Parts::Nil);
+        assert_eq!(Parts::split("//"), Parts::Nil);
     }
 }
